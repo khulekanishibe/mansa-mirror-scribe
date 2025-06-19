@@ -2,38 +2,49 @@
 import React, { useState } from 'react';
 import { SidebarProvider } from '../components/ui/sidebar';
 import AssessmentSidebar from '../components/AssessmentSidebar';
-import AssessmentHeader from '../components/AssessmentHeader';
+import AssessmentStickyHeader from '../components/AssessmentStickyHeader';
 import QuestionArea from '../components/QuestionArea';
 import AnswerArea from '../components/AnswerArea';
-import SubmissionFooter from '../components/SubmissionFooter';
 import { ThemeProvider } from '../components/ThemeProvider';
 import { examData } from '../data/examData';
 
 const Index = () => {
   const [currentQuestion, setCurrentQuestion] = useState(1);
-  const [answers, setAnswers] = useState<Record<number, string>>({});
+  const [currentSubQuestion, setCurrentSubQuestion] = useState("1");
+  const [answers, setAnswers] = useState<Record<string, string>>({});
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-  const totalQuestions = examData.questions.length;
-
-  const handleAnswerChange = (questionId: number, content: string) => {
+  const handleAnswerChange = (questionId: number, subQuestionId: string, content: string) => {
+    const answerKey = `${questionId}.${subQuestionId}`;
     setAnswers(prev => ({
       ...prev,
-      [questionId]: content
+      [answerKey]: content
     }));
   };
 
-  const handleNext = () => {
-    if (currentQuestion < totalQuestions) {
-      setCurrentQuestion(prev => prev + 1);
-    }
+  const handleQuestionSelect = (questionId: number, subQuestionId: string = "1") => {
+    setCurrentQuestion(questionId);
+    setCurrentSubQuestion(subQuestionId);
   };
 
-  const handlePrevious = () => {
-    if (currentQuestion > 1) {
-      setCurrentQuestion(prev => prev - 1);
-    }
+  const handleSave = () => {
+    console.log('Saving answers...', answers);
+    // Implement save logic
   };
+
+  const handleSubmit = () => {
+    console.log('Submitting exam...', answers);
+    // Implement submit logic
+  };
+
+  const handleHelp = () => {
+    console.log('Opening help...');
+    // Implement help logic
+  };
+
+  const currentAnswerKey = `${currentQuestion}.${currentSubQuestion}`;
+  const currentAnswer = answers[currentAnswerKey] || '';
 
   return (
     <ThemeProvider isDarkMode={isDarkMode}>
@@ -41,28 +52,36 @@ const Index = () => {
         <div className="min-h-screen flex w-full bg-gray-50 dark:bg-gray-900">
           <AssessmentSidebar 
             currentQuestion={currentQuestion}
-            onQuestionSelect={setCurrentQuestion}
+            currentSubQuestion={currentSubQuestion}
+            onQuestionSelect={handleQuestionSelect}
             answers={answers}
+            isCollapsed={sidebarCollapsed}
+            onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
           />
           <div className="flex-1 flex flex-col">
-            <AssessmentHeader 
+            <AssessmentStickyHeader
+              currentQuestion={currentQuestion}
+              currentSubQuestion={currentSubQuestion}
               isDarkMode={isDarkMode}
               onToggleDarkMode={() => setIsDarkMode(!isDarkMode)}
+              onSave={handleSave}
+              onSubmit={handleSubmit}
+              onHelp={handleHelp}
             />
-            <div className="flex-1 flex flex-col lg:flex-row gap-6 p-6">
-              <QuestionArea currentQuestion={currentQuestion} />
-              <AnswerArea 
-                questionId={currentQuestion}
-                value={answers[currentQuestion] || ''}
-                onChange={(content) => handleAnswerChange(currentQuestion, content)}
-              />
+            <div className="flex-1 overflow-auto">
+              <div className="max-w-6xl mx-auto p-6 space-y-6">
+                <QuestionArea 
+                  currentQuestion={currentQuestion}
+                  currentSubQuestion={parseInt(currentSubQuestion)}
+                />
+                <AnswerArea 
+                  questionId={currentQuestion}
+                  subQuestionId={currentSubQuestion}
+                  value={currentAnswer}
+                  onChange={(content) => handleAnswerChange(currentQuestion, currentSubQuestion, content)}
+                />
+              </div>
             </div>
-            <SubmissionFooter 
-              currentQuestion={currentQuestion}
-              totalQuestions={totalQuestions}
-              onNext={handleNext}
-              onPrevious={handlePrevious}
-            />
           </div>
         </div>
       </SidebarProvider>

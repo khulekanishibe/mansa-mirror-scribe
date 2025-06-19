@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { Clock, CheckCircle, Circle, AlertCircle } from 'lucide-react';
+import React, { useState } from 'react';
+import { Clock, CheckCircle, Circle, AlertCircle, ChevronRight, ChevronDown, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -12,22 +12,44 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from './ui/sidebar';
+import { Button } from './ui/button';
 import { examData } from '../data/examData';
 
 interface AssessmentSidebarProps {
   currentQuestion: number;
-  onQuestionSelect: (questionId: number) => void;
-  answers: Record<number, string>;
+  currentSubQuestion?: string;
+  onQuestionSelect: (questionId: number, subQuestionId?: string) => void;
+  answers: Record<string, string>;
+  isCollapsed: boolean;
+  onToggleCollapse: () => void;
 }
 
-const AssessmentSidebar = ({ currentQuestion, onQuestionSelect, answers }: AssessmentSidebarProps) => {
-  const totalQuestions = examData.questions.length;
+const AssessmentSidebar = ({ 
+  currentQuestion, 
+  currentSubQuestion = "1",
+  onQuestionSelect, 
+  answers,
+  isCollapsed,
+  onToggleCollapse
+}: AssessmentSidebarProps) => {
+  const [expandedQuestions, setExpandedQuestions] = useState<number[]>([currentQuestion]);
   const timeLeft = "1:56:50";
   
-  const getQuestionStatus = (questionId: number) => {
-    const hasAnswer = answers[questionId] && answers[questionId].trim().length > 50; // Require substantial content
+  const toggleQuestionExpansion = (questionNumber: number) => {
+    setExpandedQuestions(prev => 
+      prev.includes(questionNumber)
+        ? prev.filter(q => q !== questionNumber)
+        : [...prev, questionNumber]
+    );
+  };
+
+  const getQuestionStatus = (questionId: number, subQuestionId?: string) => {
+    const answerKey = subQuestionId ? `${questionId}.${subQuestionId}` : questionId.toString();
+    const hasAnswer = answers[answerKey] && answers[answerKey].trim().length > 50;
+    const isCurrent = questionId === currentQuestion && (!subQuestionId || subQuestionId === currentSubQuestion);
+    
     if (hasAnswer) return 'answered';
-    if (questionId === currentQuestion) return 'current';
+    if (isCurrent) return 'current';
     return 'unanswered';
   };
 
@@ -42,22 +64,69 @@ const AssessmentSidebar = ({ currentQuestion, onQuestionSelect, answers }: Asses
     }
   };
 
+  const totalQuestions = examData.questions.length;
   const answeredCount = Object.keys(answers).filter(key => {
-    const answer = answers[parseInt(key)];
+    const answer = answers[key];
     return answer && answer.trim().length > 50;
   }).length;
+
+  if (isCollapsed) {
+    return (
+      <div className="w-16 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col items-center py-4">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onToggleCollapse}
+          className="mb-4"
+          title="Expand Sidebar"
+        >
+          <PanelLeftOpen className="w-5 h-5" />
+        </Button>
+        <div className="space-y-2">
+          {examData.questions.map((question) => {
+            const status = getQuestionStatus(question.number);
+            return (
+              <Button
+                key={question.number}
+                variant="ghost"
+                size="sm"
+                onClick={() => onQuestionSelect(question.number, "1")}
+                className={`w-10 h-10 p-0 ${
+                  status === 'answered' ? 'bg-emerald-50 hover:bg-emerald-100' : 
+                  status === 'current' ? 'bg-blue-50 hover:bg-blue-100' : ''
+                }`}
+                title={`Question ${question.number}`}
+              >
+                <span className="text-sm font-medium">{question.number}</span>
+              </Button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Sidebar className="border-r border-gray-200 dark:border-gray-700">
       <SidebarHeader className="p-4 border-b border-gray-200 dark:border-gray-700">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-8 h-8 bg-[#0d643f] rounded-full flex items-center justify-center">
-            <span className="text-white text-sm font-bold">OSA</span>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-[#0d643f] rounded-full flex items-center justify-center">
+              <span className="text-white text-sm font-bold">OSA</span>
+            </div>
+            <div>
+              <h2 className="font-semibold text-gray-900 dark:text-gray-100">Assessment Portal</h2>
+              <p className="text-xs text-gray-600 dark:text-gray-400">Enhanced Navigation</p>
+            </div>
           </div>
-          <div>
-            <h2 className="font-semibold text-gray-900 dark:text-gray-100">Assessment Portal</h2>
-            <p className="text-xs text-gray-600 dark:text-gray-400">Prototype Test</p>
-          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onToggleCollapse}
+            title="Collapse Sidebar"
+          >
+            <PanelLeftClose className="w-5 h-5" />
+          </Button>
         </div>
         
         <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
@@ -101,33 +170,69 @@ const AssessmentSidebar = ({ currentQuestion, onQuestionSelect, answers }: Asses
           <SidebarGroupContent>
             <SidebarMenu>
               {examData.questions.map((question) => {
-                const status = getQuestionStatus(question.number);
-                const subQuestionCount = question.subquestions.length;
+                const isExpanded = expandedQuestions.includes(question.number);
+                const hasSubQuestions = question.subquestions.length > 1;
+                const mainStatus = getQuestionStatus(question.number);
                 
                 return (
-                  <SidebarMenuItem key={question.number}>
-                    <SidebarMenuButton
-                      onClick={() => onQuestionSelect(question.number)}
-                      isActive={question.number === currentQuestion}
-                      className={`w-full justify-start py-3 ${
-                        status === 'answered' ? 'bg-emerald-50 dark:bg-emerald-900/20 hover:bg-emerald-100 dark:hover:bg-emerald-900/30' : 
-                        status === 'current' ? 'bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30' : 
-                        'hover:bg-gray-50 dark:hover:bg-gray-700'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between w-full">
+                  <div key={question.number}>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        onClick={() => {
+                          if (hasSubQuestions) {
+                            toggleQuestionExpansion(question.number);
+                          } else {
+                            onQuestionSelect(question.number, "1");
+                          }
+                        }}
+                        className={`w-full justify-between py-3 ${
+                          mainStatus === 'answered' ? 'bg-emerald-50 dark:bg-emerald-900/20' : 
+                          mainStatus === 'current' ? 'bg-blue-50 dark:bg-blue-900/20' : ''
+                        }`}
+                      >
                         <div className="flex items-center gap-3">
-                          {getStatusIcon(status)}
+                          {getStatusIcon(mainStatus)}
                           <div>
                             <span className="font-medium">Question {question.number}</span>
                             <div className="text-xs text-gray-500 dark:text-gray-400">
-                              {subQuestionCount} part{subQuestionCount > 1 ? 's' : ''} • {question.marks} marks
+                              {question.subquestions.length} part{question.subquestions.length > 1 ? 's' : ''} • {question.marks} marks
                             </div>
                           </div>
                         </div>
+                        {hasSubQuestions && (
+                          isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />
+                        )}
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    
+                    {hasSubQuestions && isExpanded && (
+                      <div className="ml-6 space-y-1 py-2">
+                        {question.subquestions.map((subQuestion, index) => {
+                          const subStatus = getQuestionStatus(question.number, (index + 1).toString());
+                          const isCurrentSub = question.number === currentQuestion && (index + 1).toString() === currentSubQuestion;
+                          
+                          return (
+                            <SidebarMenuItem key={subQuestion.number}>
+                              <SidebarMenuButton
+                                onClick={() => onQuestionSelect(question.number, (index + 1).toString())}
+                                className={`w-full justify-start py-2 text-sm ${
+                                  isCurrentSub ? 'bg-blue-100 dark:bg-blue-900/30 font-medium' : ''
+                                } ${
+                                  subStatus === 'answered' ? 'bg-emerald-25 dark:bg-emerald-900/10' : ''
+                                }`}
+                              >
+                                <div className="flex items-center gap-2">
+                                  {getStatusIcon(subStatus)}
+                                  <span>{subQuestion.number}</span>
+                                  <span className="text-xs text-gray-500">({subQuestion.marks}m)</span>
+                                </div>
+                              </SidebarMenuButton>
+                            </SidebarMenuItem>
+                          );
+                        })}
                       </div>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
+                    )}
+                  </div>
                 );
               })}
             </SidebarMenu>
@@ -141,9 +246,9 @@ const AssessmentSidebar = ({ currentQuestion, onQuestionSelect, answers }: Asses
                 <div className="font-medium mb-1">Quick Tips:</div>
                 <ul className="space-y-1">
                   <li>• Click any question to jump instantly</li>
+                  <li>• Expand questions to see sub-parts</li>
                   <li>• Auto-save works every 2 seconds</li>
-                  <li>• Use table templates for accounting</li>
-                  <li>• Show all working steps</li>
+                  <li>• Use table templates for calculations</li>
                 </ul>
               </div>
             </div>
