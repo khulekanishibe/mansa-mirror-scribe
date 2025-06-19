@@ -7,17 +7,32 @@ import QuestionArea from '../components/QuestionArea';
 import AnswerArea from '../components/AnswerArea';
 import SubmissionFooter from '../components/SubmissionFooter';
 import { ThemeProvider } from '../components/ThemeProvider';
+import { examData } from '../data/examData';
 
 const Index = () => {
   const [currentQuestion, setCurrentQuestion] = useState(1);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [isDarkMode, setIsDarkMode] = useState(false);
 
+  const totalQuestions = examData.questions.length;
+
   const handleAnswerChange = (questionId: number, content: string) => {
     setAnswers(prev => ({
       ...prev,
       [questionId]: content
     }));
+  };
+
+  const handleNext = () => {
+    if (currentQuestion < totalQuestions) {
+      setCurrentQuestion(prev => prev + 1);
+    }
+  };
+
+  const handlePrevious = () => {
+    if (currentQuestion > 1) {
+      setCurrentQuestion(prev => prev - 1);
+    }
   };
 
   return (
@@ -44,9 +59,9 @@ const Index = () => {
             </div>
             <SubmissionFooter 
               currentQuestion={currentQuestion}
-              totalQuestions={10}
-              onNext={() => setCurrentQuestion(prev => Math.min(prev + 1, 10))}
-              onPrevious={() => setCurrentQuestion(prev => Math.max(prev - 1, 1))}
+              totalQuestions={totalQuestions}
+              onNext={handleNext}
+              onPrevious={handlePrevious}
             />
           </div>
         </div>

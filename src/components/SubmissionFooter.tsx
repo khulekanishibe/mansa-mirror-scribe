@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Save, Send, ChevronLeft, ChevronRight, AlertTriangle } from 'lucide-react';
+import { Save, Send, ChevronLeft, ChevronRight, AlertTriangle, HelpCircle } from 'lucide-react';
 import { Button } from './ui/button';
 
 interface SubmissionFooterProps {
@@ -21,21 +21,37 @@ const SubmissionFooter = ({ currentQuestion, totalQuestions, onNext, onPrevious 
             variant="outline"
             onClick={onPrevious}
             disabled={currentQuestion === 1}
-            className="border-gray-300 dark:border-gray-600"
+            className="border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
           >
             <ChevronLeft className="w-4 h-4 mr-2" />
             Previous
           </Button>
           
-          <span className="text-sm text-gray-600 dark:text-gray-400">
-            Question {currentQuestion} of {totalQuestions}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600 dark:text-gray-400">
+              Question {currentQuestion} of {totalQuestions}
+            </span>
+            <div className="flex gap-1">
+              {Array.from({ length: totalQuestions }, (_, i) => (
+                <div
+                  key={i + 1}
+                  className={`w-2 h-2 rounded-full ${
+                    i + 1 === currentQuestion
+                      ? 'bg-blue-500'
+                      : i + 1 < currentQuestion
+                      ? 'bg-green-500'
+                      : 'bg-gray-300 dark:bg-gray-600'
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
           
           <Button
             variant="outline"
             onClick={onNext}
             disabled={currentQuestion === totalQuestions}
-            className="border-gray-300 dark:border-gray-600"
+            className="border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
           >
             Next
             <ChevronRight className="w-4 h-4 ml-2" />
@@ -45,10 +61,19 @@ const SubmissionFooter = ({ currentQuestion, totalQuestions, onNext, onPrevious 
         <div className="flex items-center gap-4">
           <Button
             variant="outline"
-            className="bg-[#5bc0de] text-white border-[#5bc0de] hover:bg-[#46b8da]"
+            className="bg-[#5bc0de] text-white border-[#5bc0de] hover:bg-[#46b8da] hover:border-[#46b8da]"
           >
             <Save className="w-4 h-4 mr-2" />
             Save Progress
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-[#1177d1] border-[#1177d1] hover:bg-[#1177d1] hover:text-white"
+          >
+            <HelpCircle className="w-4 h-4 mr-2" />
+            Help
           </Button>
           
           {!showSubmitConfirm ? (
@@ -64,10 +89,10 @@ const SubmissionFooter = ({ currentQuestion, totalQuestions, onNext, onPrevious 
               <AlertTriangle className="w-5 h-5 text-amber-600" />
               <div>
                 <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
-                  Confirm Submission
+                  Confirm Prototype Submission
                 </p>
                 <p className="text-xs text-amber-700 dark:text-amber-300">
-                  This action cannot be undone
+                  This will end the test session
                 </p>
               </div>
               <div className="flex gap-2">
@@ -83,7 +108,7 @@ const SubmissionFooter = ({ currentQuestion, totalQuestions, onNext, onPrevious 
                   size="sm"
                   className="bg-[#d9534f] text-white hover:bg-[#c9302c]"
                 >
-                  Submit Final
+                  End Test
                 </Button>
               </div>
             </div>

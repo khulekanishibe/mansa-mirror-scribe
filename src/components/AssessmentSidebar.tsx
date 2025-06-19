@@ -12,6 +12,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from './ui/sidebar';
+import { examData } from '../data/examData';
 
 interface AssessmentSidebarProps {
   currentQuestion: number;
@@ -20,11 +21,11 @@ interface AssessmentSidebarProps {
 }
 
 const AssessmentSidebar = ({ currentQuestion, onQuestionSelect, answers }: AssessmentSidebarProps) => {
-  const totalQuestions = 10;
+  const totalQuestions = examData.questions.length;
   const timeLeft = "1:56:50";
   
   const getQuestionStatus = (questionId: number) => {
-    const hasAnswer = answers[questionId] && answers[questionId].trim().length > 0;
+    const hasAnswer = answers[questionId] && answers[questionId].trim().length > 50; // Require substantial content
     if (hasAnswer) return 'answered';
     if (questionId === currentQuestion) return 'current';
     return 'unanswered';
@@ -41,18 +42,21 @@ const AssessmentSidebar = ({ currentQuestion, onQuestionSelect, answers }: Asses
     }
   };
 
-  const answeredCount = Object.keys(answers).filter(key => answers[parseInt(key)]?.trim().length > 0).length;
+  const answeredCount = Object.keys(answers).filter(key => {
+    const answer = answers[parseInt(key)];
+    return answer && answer.trim().length > 50;
+  }).length;
 
   return (
     <Sidebar className="border-r border-gray-200 dark:border-gray-700">
       <SidebarHeader className="p-4 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center gap-3 mb-4">
           <div className="w-8 h-8 bg-[#0d643f] rounded-full flex items-center justify-center">
-            <span className="text-white text-sm font-bold">M</span>
+            <span className="text-white text-sm font-bold">OSA</span>
           </div>
           <div>
-            <h2 className="font-semibold text-gray-900 dark:text-gray-100">MANCOSA</h2>
-            <p className="text-xs text-gray-600 dark:text-gray-400">Online Assessment</p>
+            <h2 className="font-semibold text-gray-900 dark:text-gray-100">Assessment Portal</h2>
+            <p className="text-xs text-gray-600 dark:text-gray-400">Prototype Test</p>
           </div>
         </div>
         
@@ -84,6 +88,9 @@ const AssessmentSidebar = ({ currentQuestion, onQuestionSelect, answers }: Asses
                     style={{ width: `${(answeredCount / totalQuestions) * 100}%` }}
                   ></div>
                 </div>
+                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Total: {examData.totalMarks} marks
+                </div>
               </div>
             </div>
           </SidebarGroupContent>
@@ -93,25 +100,53 @@ const AssessmentSidebar = ({ currentQuestion, onQuestionSelect, answers }: Asses
           <SidebarGroupLabel>Questions</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {Array.from({ length: totalQuestions }, (_, i) => i + 1).map((questionId) => {
-                const status = getQuestionStatus(questionId);
+              {examData.questions.map((question) => {
+                const status = getQuestionStatus(question.number);
+                const subQuestionCount = question.subquestions.length;
+                
                 return (
-                  <SidebarMenuItem key={questionId}>
+                  <SidebarMenuItem key={question.number}>
                     <SidebarMenuButton
-                      onClick={() => onQuestionSelect(questionId)}
-                      isActive={questionId === currentQuestion}
-                      className={`w-full justify-start ${
-                        status === 'answered' ? 'bg-emerald-50 dark:bg-emerald-900/20' : 
-                        status === 'current' ? 'bg-blue-50 dark:bg-blue-900/20' : ''
+                      onClick={() => onQuestionSelect(question.number)}
+                      isActive={question.number === currentQuestion}
+                      className={`w-full justify-start py-3 ${
+                        status === 'answered' ? 'bg-emerald-50 dark:bg-emerald-900/20 hover:bg-emerald-100 dark:hover:bg-emerald-900/30' : 
+                        status === 'current' ? 'bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30' : 
+                        'hover:bg-gray-50 dark:hover:bg-gray-700'
                       }`}
                     >
-                      {getStatusIcon(status)}
-                      <span>Question {questionId}</span>
+                      <div className="flex items-center justify-between w-full">
+                        <div className="flex items-center gap-3">
+                          {getStatusIcon(status)}
+                          <div>
+                            <span className="font-medium">Question {question.number}</span>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                              {subQuestionCount} part{subQuestionCount > 1 ? 's' : ''} • {question.marks} marks
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 );
               })}
             </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup className="mt-auto">
+          <SidebarGroupContent>
+            <div className="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+              <div className="text-xs text-amber-800 dark:text-amber-200">
+                <div className="font-medium mb-1">Quick Tips:</div>
+                <ul className="space-y-1">
+                  <li>• Click any question to jump instantly</li>
+                  <li>• Auto-save works every 2 seconds</li>
+                  <li>• Use table templates for accounting</li>
+                  <li>• Show all working steps</li>
+                </ul>
+              </div>
+            </div>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
