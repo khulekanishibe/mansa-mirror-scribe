@@ -1,11 +1,7 @@
-import React, { useState } from 'react';
-import { Rnd } from 'react-rnd';
-import { useEditor, EditorContent } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
-import Table from '@tiptap/extension-table';
-import TableRow from '@tiptap/extension-table-row';
-import TableHeader from '@tiptap/extension-table-header';
-import TableCell from '@tiptap/extension-table-cell';
+
+import React, { useState, useRef } from 'react';
+import { Button } from './ui/button';
+import { Plus, Minus, GripVertical } from 'lucide-react';
 
 interface TableConfig {
   title: string;
@@ -22,19 +18,7 @@ interface EditableTableProps {
 const EditableTable: React.FC<EditableTableProps> = ({ config, onChange }) => {
   const [tableData, setTableData] = useState(config.rows);
   const [columns, setColumns] = useState(config.columns);
-
-  const editor = useEditor({
-    extensions: [
-      StarterKit,
-      Table.configure({
-        resizable: true,
-      }),
-      TableRow,
-      TableHeader,
-      TableCell,
-    ],
-    content: '<p>Rich text editor for table cells</p>',
-  });
+  const [selectedCell, setSelectedCell] = useState<{row: number, col: number} | null>(null);
 
   const handleCellChange = (rowIndex: number, cellIndex: number, value: string) => {
     const updatedData = tableData.map((row, rIdx) => 
@@ -54,6 +38,7 @@ const EditableTable: React.FC<EditableTableProps> = ({ config, onChange }) => {
   };
 
   const removeRow = (index: number) => {
+    if (tableData.length <= 1) return;
     const updatedData = tableData.filter((_, idx) => idx !== index);
     setTableData(updatedData);
     onChange(updatedData);
@@ -62,7 +47,7 @@ const EditableTable: React.FC<EditableTableProps> = ({ config, onChange }) => {
   const addColumn = () => {
     if (!config.allowAddColumns) return;
     
-    const newColumn = { name: `Column ${columns.length + 1}`, width: 150 };
+    const newColumn = { name: `Column ${columns.length + 1}`, width: 120 };
     const updatedColumns = [...columns, newColumn];
     const updatedData = tableData.map(row => [...row, '']);
     
@@ -72,7 +57,7 @@ const EditableTable: React.FC<EditableTableProps> = ({ config, onChange }) => {
   };
 
   const removeColumn = (index: number) => {
-    if (!config.allowAddColumns) return;
+    if (!config.allowAddColumns || columns.length <= 1) return;
     
     const updatedColumns = columns.filter((_, idx) => idx !== index);
     const updatedData = tableData.map(row => row.filter((_, idx) => idx !== index));
@@ -82,95 +67,122 @@ const EditableTable: React.FC<EditableTableProps> = ({ config, onChange }) => {
     onChange(updatedData);
   };
 
-  const handleColumnResize = (newWidth: number, index: number) => {
-    const updatedColumns = columns.map((col, i) => 
-      i === index ? { ...col, width: newWidth } : col
-    );
-    setColumns(updatedColumns);
-  };
-
   return (
-    <div className="border rounded-lg overflow-hidden">
-      <div className="bg-gray-50 dark:bg-gray-800 p-3 border-b">
-        <h3 className="font-medium text-gray-900 dark:text-gray-100">{config.title}</h3>
-        <div className="flex gap-2 mt-2">
-          <button
+    <div className="border rounded-lg bg-white shadow-sm">
+      {/* Table Header */}
+      <div className="bg-gray-50 p-3 border-b flex items-center justify-between">
+        <h3 className="font-medium text-gray-900">{config.title}</h3>
+        <div className="flex gap-2">
+          <Button
             onClick={addRow}
-            className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
+            size="sm"
+            variant="outline"
+            className="h-8 px-3"
           >
-            Add Row
-          </button>
+            <Plus className="w-4 h-4 mr-1" />
+            Row
+          </Button>
           {config.allowAddColumns && (
-            <button
+            <Button
               onClick={addColumn}
-              className="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600"
+              size="sm"
+              variant="outline"
+              className="h-8 px-3"
             >
-              Add Column
-            </button>
+              <Plus className="w-4 h-4 mr-1" />
+              Column
+            </Button>
           )}
         </div>
       </div>
-      
-      <div className="overflow-x-auto">
-        <table className="w-full">
+
+      {/* Table Container */}
+      <div className="overflow-auto max-h-96">
+        <table className="w-full border-collapse">
+          {/* Table Headers */}
           <thead>
-            <tr className="bg-gray-100 dark:bg-gray-700">
+            <tr className="bg-gray-100">
               {columns.map((column, index) => (
-                <th key={index} className="border border-gray-300 dark:border-gray-600">
-                  <Rnd
-                    size={{ width: column.width, height: 'auto' }}
-                    enableResizing={{ right: true }}
-                    disableDragging
-                    onResizeStop={(e, direction, ref) => 
-                      handleColumnResize(parseFloat(ref.style.width), index)
-                    }
-                    className="p-2"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium text-sm">{column.name}</span>
-                      {config.allowAddColumns && columns.length > 1 && (
-                        <button
-                          onClick={() => removeColumn(index)}
-                          className="ml-2 text-red-500 hover:text-red-700 text-xs"
-                        >
-                          ×
-                        </button>
-                      )}
-                    </div>
-                  </Rnd>
+                <th
+                  key={index}
+                  className="border border-gray-300 p-0 relative group"
+                  style={{ minWidth: column.width }}
+                >
+                  <div className="p-2 flex items-center justify-between">
+                    <span className="font-medium text-sm text-gray-700">
+                      {column.name}
+                    </span>
+                    {config.allowAddColumns && columns.length > 1 && (
+                      <Button
+                        onClick={() => removeColumn(index)}
+                        size="sm"
+                        variant="ghost"
+                        className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <Minus className="w-3 h-3 text-red-500" />
+                      </Button>
+                    )}
+                  </div>
                 </th>
               ))}
-              <th className="border border-gray-300 dark:border-gray-600 w-12">
-                Actions
+              <th className="border border-gray-300 w-12 p-1">
+                <GripVertical className="w-4 h-4 mx-auto text-gray-400" />
               </th>
             </tr>
           </thead>
+
+          {/* Table Body */}
           <tbody>
             {tableData.map((row, rowIndex) => (
-              <tr key={rowIndex}>
+              <tr key={rowIndex} className="hover:bg-gray-50">
                 {row.map((cell, cellIndex) => (
-                  <td key={cellIndex} className="border border-gray-300 dark:border-gray-600 p-0">
+                  <td
+                    key={cellIndex}
+                    className="border border-gray-300 p-0"
+                  >
                     <textarea
                       value={cell}
                       onChange={(e) => handleCellChange(rowIndex, cellIndex, e.target.value)}
-                      className="w-full h-full min-h-[60px] p-2 border-none resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 bg-transparent"
+                      onFocus={() => setSelectedCell({row: rowIndex, col: cellIndex})}
+                      onBlur={() => setSelectedCell(null)}
+                      className={`
+                        w-full h-full min-h-[40px] p-2 border-none resize-none 
+                        focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset
+                        bg-transparent text-sm
+                        ${selectedCell?.row === rowIndex && selectedCell?.col === cellIndex 
+                          ? 'bg-blue-50' : ''
+                        }
+                      `}
                       placeholder="Enter value..."
+                      rows={1}
+                      style={{ 
+                        minWidth: columns[cellIndex]?.width || 120,
+                        fontFamily: 'inherit'
+                      }}
                     />
                   </td>
                 ))}
-                <td className="border border-gray-300 dark:border-gray-600 p-2 text-center">
-                  <button
+                <td className="border border-gray-300 p-1 text-center">
+                  <Button
                     onClick={() => removeRow(rowIndex)}
-                    className="text-red-500 hover:text-red-700 text-sm"
+                    size="sm"
+                    variant="ghost"
+                    className="h-6 w-6 p-0 hover:bg-red-50"
                     disabled={tableData.length <= 1}
                   >
-                    Remove
-                  </button>
+                    <Minus className="w-3 h-3 text-red-500" />
+                  </Button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* Table Footer */}
+      <div className="bg-gray-50 p-2 border-t text-xs text-gray-500 flex justify-between">
+        <span>{tableData.length} rows × {columns.length} columns</span>
+        <span>Click any cell to edit • Use Tab to move between cells</span>
       </div>
     </div>
   );

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
@@ -15,7 +14,8 @@ import {
   FileText,
   Calculator,
   Save,
-  Clock
+  Clock,
+  X
 } from 'lucide-react';
 import EditableTable from './EditableTable';
 import { tableTemplates } from '../data/tableConfigs';
@@ -29,7 +29,7 @@ interface AnswerAreaProps {
 
 const AnswerArea = ({ questionId, subQuestionId, value, onChange }: AnswerAreaProps) => {
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
-  const [activeTable, setActiveTable] = useState<string | null>(null);
+  const [activeTables, setActiveTables] = useState<string[]>([]);
   const [selectedText, setSelectedText] = useState('');
 
   // Auto-save functionality
@@ -84,6 +84,16 @@ const AnswerArea = ({ questionId, subQuestionId, value, onChange }: AnswerAreaPr
   const insertList = (ordered: boolean = false) => {
     const listItem = ordered ? '1. ' : '• ';
     insertSymbol(`\n${listItem}`);
+  };
+
+  const addTable = (templateKey: string) => {
+    if (!activeTables.includes(templateKey)) {
+      setActiveTables(prev => [...prev, templateKey]);
+    }
+  };
+
+  const removeTable = (templateKey: string) => {
+    setActiveTables(prev => prev.filter(key => key !== templateKey));
   };
 
   const mathSymbols = ['√', '²', '³', '±', '≤', '≥', '×', '÷', '%', 'R', '$', '€'];
@@ -192,17 +202,6 @@ const AnswerArea = ({ questionId, subQuestionId, value, onChange }: AnswerAreaPr
               </Button>
             ))}
           </div>
-          
-          <div className="h-6 w-px bg-gray-300 dark:bg-gray-600"></div>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            title="Upload File"
-          >
-            <Upload className="w-4 h-4 mr-2" />
-            Upload
-          </Button>
         </div>
 
         {/* Table Templates */}
@@ -218,28 +217,38 @@ const AnswerArea = ({ questionId, subQuestionId, value, onChange }: AnswerAreaPr
                   key={templateKey}
                   variant="outline"
                   size="sm"
-                  onClick={() => setActiveTable(activeTable === templateKey ? null : templateKey)}
-                  className={`text-[#0d643f] border-[#0d643f] hover:bg-[#0d643f] hover:text-white ${
-                    activeTable === templateKey ? 'bg-[#0d643f] text-white' : ''
-                  }`}
+                  onClick={() => addTable(templateKey)}
+                  className="text-[#0d643f] border-[#0d643f] hover:bg-[#0d643f] hover:text-white"
                 >
                   <TableIcon className="w-4 h-4 mr-2" />
-                  {tableTemplates[templateKey]?.title || templateKey}
+                  Add {tableTemplates[templateKey]?.title || templateKey}
                 </Button>
               ))}
             </div>
           </div>
         )}
 
-        {/* Active Table */}
-        {activeTable && tableTemplates[activeTable] && (
-          <EditableTable 
-            config={tableTemplates[activeTable]}
-            onChange={(data) => {
-              console.log('Table data changed:', data);
-            }}
-          />
-        )}
+        {/* Active Tables */}
+        {activeTables.map((templateKey) => (
+          <div key={templateKey} className="relative">
+            <div className="absolute top-2 right-2 z-10">
+              <Button
+                onClick={() => removeTable(templateKey)}
+                size="sm"
+                variant="outline"
+                className="h-8 w-8 p-0 bg-white shadow-md hover:bg-red-50"
+              >
+                <X className="w-4 h-4 text-red-500" />
+              </Button>
+            </div>
+            <EditableTable 
+              config={tableTemplates[templateKey]}
+              onChange={(data) => {
+                console.log('Table data changed:', data);
+              }}
+            />
+          </div>
+        ))}
 
         {/* Main Answer Textarea */}
         <div className="space-y-2">

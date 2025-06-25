@@ -1,108 +1,117 @@
 
-interface TableCell {
-  value: string;
-  isFormula?: boolean;
-  isReadOnly?: boolean;
-}
-
 interface TableConfig {
   title: string;
-  headers: string[];
-  initialRows: TableCell[][];
-  allowAddRows?: boolean;
-  allowAddColumns?: boolean;
-  showCalculations?: boolean;
+  allowAddColumns: boolean;
+  columns: Array<{ name: string; width: number }>;
+  rows: Array<string[]>;
 }
 
 export const tableTemplates: Record<string, TableConfig> = {
   eoq: {
     title: "Economic Order Quantity (EOQ) Calculation",
-    headers: ["Description", "Value"],
-    initialRows: [
-      [{ value: "Annual demand (D)", isReadOnly: true }, { value: "" }],
-      [{ value: "Ordering cost per order (S)", isReadOnly: true }, { value: "" }],
-      [{ value: "Holding cost per unit per year (H)", isReadOnly: true }, { value: "" }],
-      [{ value: "EOQ = √(2DS/H)", isReadOnly: true }, { value: "", isFormula: true }],
-      [{ value: "Number of orders per year = D/EOQ", isReadOnly: true }, { value: "", isFormula: true }]
+    allowAddColumns: false,
+    columns: [
+      { name: "Description", width: 300 },
+      { name: "Value", width: 200 }
     ],
-    allowAddRows: false,
-    showCalculations: true
+    rows: [
+      ["Annual demand (D)", ""],
+      ["Ordering cost per order (S)", ""],
+      ["Holding cost per unit per year (H)", ""],
+      ["EOQ = √(2DS/H)", ""],
+      ["Number of orders per year = D/EOQ", ""]
+    ]
   },
 
   fifo: {
     title: "FIFO Inventory Calculation",
-    headers: ["Date", "Purchases (Units)", "Purchases (Rate)", "Issues (Units)", "Balance (Units)", "Balance (Rate)", "Balance (Amount)"],
-    initialRows: [
-      [{ value: "01" }, { value: "" }, { value: "" }, { value: "" }, { value: "300" }, { value: "R10" }, { value: "R3,000" }],
-      [{ value: "06" }, { value: "" }, { value: "" }, { value: "200" }, { value: "" }, { value: "" }, { value: "" }],
-      [{ value: "12" }, { value: "1,200" }, { value: "R12" }, { value: "" }, { value: "" }, { value: "" }, { value: "" }],
-      [{ value: "13" }, { value: "-100" }, { value: "R12" }, { value: "" }, { value: "" }, { value: "" }, { value: "" }],
-      [{ value: "18" }, { value: "200" }, { value: "R13" }, { value: "" }, { value: "" }, { value: "" }, { value: "" }],
-      [{ value: "25" }, { value: "" }, { value: "" }, { value: "1,000" }, { value: "" }, { value: "" }, { value: "" }]
+    allowAddColumns: true,
+    columns: [
+      { name: "Date", width: 80 },
+      { name: "Purchases (Units)", width: 120 },
+      { name: "Purchases (Rate)", width: 120 },
+      { name: "Issues (Units)", width: 120 },
+      { name: "Balance (Units)", width: 120 },
+      { name: "Balance (Rate)", width: 120 },
+      { name: "Balance (Amount)", width: 130 }
     ],
-    allowAddRows: true,
-    showCalculations: true
+    rows: [
+      ["01", "", "", "", "300", "R10", "R3,000"],
+      ["06", "", "", "200", "", "", ""],
+      ["12", "1,200", "R12", "", "", "", ""],
+      ["13", "-100", "R12", "", "", "", ""],
+      ["18", "200", "R13", "", "", "", ""],
+      ["25", "", "", "1,000", "", "", ""]
+    ]
   },
 
   labourCost: {
     title: "Labour Cost Calculation",
-    headers: ["Description", "Amount"],
-    initialRows: [
-      [{ value: "Monthly salary after deductions", isReadOnly: true }, { value: "R20,000" }],
-      [{ value: "Employee deductions for the month", isReadOnly: true }, { value: "R5,000" }],
-      [{ value: "Gross monthly salary", isReadOnly: true }, { value: "", isFormula: true }],
-      [{ value: "Annual bonus payable", isReadOnly: true }, { value: "R15,000" }],
-      [{ value: "Employer contributions (pension/medical)", isReadOnly: true }, { value: "R4,000" }],
-      [{ value: "Total labour cost", isReadOnly: true }, { value: "", isFormula: true }]
+    allowAddColumns: false,
+    columns: [
+      { name: "Description", width: 300 },
+      { name: "Amount", width: 150 }
     ],
-    allowAddRows: false,
-    showCalculations: true
+    rows: [
+      ["Monthly salary after deductions", "R20,000"],
+      ["Employee deductions for the month", "R5,000"],
+      ["Gross monthly salary", ""],
+      ["Annual bonus payable", "R15,000"],
+      ["Employer contributions (pension/medical)", "R4,000"],
+      ["Total labour cost", ""]
+    ]
   },
 
   cashBudget: {
     title: "Cash Budget",
-    headers: ["", "August", "September", "October"],
-    initialRows: [
-      [{ value: "Opening Balance", isReadOnly: true }, { value: "" }, { value: "" }, { value: "" }],
-      [{ value: "RECEIPTS:", isReadOnly: true }, { value: "" }, { value: "" }, { value: "" }],
-      [{ value: "Capital contribution", isReadOnly: true }, { value: "" }, { value: "" }, { value: "" }],
-      [{ value: "Cash sales", isReadOnly: true }, { value: "" }, { value: "" }, { value: "" }],
-      [{ value: "Credit sales collections", isReadOnly: true }, { value: "" }, { value: "" }, { value: "" }],
-      [{ value: "Total Receipts", isReadOnly: true }, { value: "", isFormula: true }, { value: "", isFormula: true }, { value: "", isFormula: true }],
-      [{ value: "PAYMENTS:", isReadOnly: true }, { value: "" }, { value: "" }, { value: "" }],
-      [{ value: "Equipment deposit", isReadOnly: true }, { value: "" }, { value: "" }, { value: "" }],
-      [{ value: "Equipment instalments", isReadOnly: true }, { value: "" }, { value: "" }, { value: "" }],
-      [{ value: "Direct materials", isReadOnly: true }, { value: "" }, { value: "" }, { value: "" }],
-      [{ value: "Direct labour", isReadOnly: true }, { value: "" }, { value: "" }, { value: "" }],
-      [{ value: "Overheads", isReadOnly: true }, { value: "" }, { value: "" }, { value: "" }],
-      [{ value: "Total Payments", isReadOnly: true }, { value: "", isFormula: true }, { value: "", isFormula: true }, { value: "", isFormula: true }],
-      [{ value: "Net Cash Flow", isReadOnly: true }, { value: "", isFormula: true }, { value: "", isFormula: true }, { value: "", isFormula: true }],
-      [{ value: "Closing Balance", isReadOnly: true }, { value: "", isFormula: true }, { value: "", isFormula: true }, { value: "", isFormula: true }]
+    allowAddColumns: true,
+    columns: [
+      { name: "", width: 200 },
+      { name: "August", width: 120 },
+      { name: "September", width: 120 },
+      { name: "October", width: 120 }
     ],
-    allowAddRows: true,
-    showCalculations: false
+    rows: [
+      ["Opening Balance", "", "", ""],
+      ["RECEIPTS:", "", "", ""],
+      ["Capital contribution", "", "", ""],
+      ["Cash sales", "", "", ""],
+      ["Credit sales collections", "", "", ""],
+      ["Total Receipts", "", "", ""],
+      ["PAYMENTS:", "", "", ""],
+      ["Equipment deposit", "", "", ""],
+      ["Equipment instalments", "", "", ""],
+      ["Direct materials", "", "", ""],
+      ["Direct labour", "", "", ""],
+      ["Overheads", "", "", ""],
+      ["Total Payments", "", "", ""],
+      ["Net Cash Flow", "", "", ""],
+      ["Closing Balance", "", "", ""]
+    ]
   },
 
   incomeStatement: {
     title: "Income Statement (Absorption Costing)",
-    headers: ["", "Amount"],
-    initialRows: [
-      [{ value: "Sales (4,500 × R200)", isReadOnly: true }, { value: "R900,000" }],
-      [{ value: "Cost of goods sold:", isReadOnly: true }, { value: "" }],
-      [{ value: "Variable manufacturing costs (5,000 × R80)", isReadOnly: true }, { value: "R400,000" }],
-      [{ value: "Fixed manufacturing overhead", isReadOnly: true }, { value: "R60,000" }],
-      [{ value: "Total manufacturing costs", isReadOnly: true }, { value: "", isFormula: true }],
-      [{ value: "Less: Closing inventory (500 × R92)", isReadOnly: true }, { value: "" }],
-      [{ value: "Cost of goods sold", isReadOnly: true }, { value: "", isFormula: true }],
-      [{ value: "Gross profit", isReadOnly: true }, { value: "", isFormula: true }],
-      [{ value: "Operating expenses:", isReadOnly: true }, { value: "" }],
-      [{ value: "Variable administrative costs (4,500 × R3)", isReadOnly: true }, { value: "" }],
-      [{ value: "Sales commission (5% × R900,000)", isReadOnly: true }, { value: "" }],
-      [{ value: "Fixed selling and administrative costs", isReadOnly: true }, { value: "R50,000" }],
-      [{ value: "Total operating expenses", isReadOnly: true }, { value: "", isFormula: true }],
-      [{ value: "Net profit", isReadOnly: true }, { value: "", isFormula: true }]
+    allowAddColumns: false,
+    columns: [
+      { name: "", width: 350 },
+      { name: "Amount", width: 150 }
     ],
-    allowAddRows: false,
-    showCalculations: false
+    rows: [
+      ["Sales (4,500 × R200)", "R900,000"],
+      ["Cost of goods sold:", ""],
+      ["Variable manufacturing costs (5,000 × R80)", "R400,000"],
+      ["Fixed manufacturing overhead", "R60,000"],
+      ["Total manufacturing costs", ""],
+      ["Less: Closing inventory (500 × R92)", ""],
+      ["Cost of goods sold", ""],
+      ["Gross profit", ""],
+      ["Operating expenses:", ""],
+      ["Variable administrative costs (4,500 × R3)", ""],
+      ["Sales commission (5% × R900,000)", ""],
+      ["Fixed selling and administrative costs", "R50,000"],
+      ["Total operating expenses", ""],
+      ["Net profit", ""]
+    ]
   }
 };
