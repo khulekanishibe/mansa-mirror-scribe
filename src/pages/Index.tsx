@@ -5,15 +5,38 @@ import AssessmentSidebar from '../components/AssessmentSidebar';
 import AssessmentStickyHeader from '../components/AssessmentStickyHeader';
 import QuestionArea from '../components/QuestionArea';
 import AnswerArea from '../components/AnswerArea';
+import ModuleSelection from '../components/ModuleSelection';
+import ExamVerification from '../components/ExamVerification';
 import { ThemeProvider } from '../components/ThemeProvider';
 import { examData } from '../data/examData';
+import { ExamModule } from '../data/moduleData';
+
+type ExamState = 'module-selection' | 'verification' | 'in-progress';
 
 const Index = () => {
+  const [examState, setExamState] = useState<ExamState>('module-selection');
+  const [selectedModule, setSelectedModule] = useState<ExamModule | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState(1);
   const [currentSubQuestion, setCurrentSubQuestion] = useState("1");
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [examStartTime, setExamStartTime] = useState<Date | null>(null);
+
+  const handleModuleSelect = (module: ExamModule) => {
+    setSelectedModule(module);
+    setExamState('verification');
+  };
+
+  const handleStartExam = () => {
+    setExamStartTime(new Date());
+    setExamState('in-progress');
+  };
+
+  const handleBackToModuleSelection = () => {
+    setSelectedModule(null);
+    setExamState('module-selection');
+  };
 
   const handleAnswerChange = (questionId: number, subQuestionId: string, content: string) => {
     const answerKey = `${questionId}.${subQuestionId}`;
@@ -26,6 +49,22 @@ const Index = () => {
   const handleQuestionSelect = (questionId: number, subQuestionId: string = "1") => {
     setCurrentQuestion(questionId);
     setCurrentSubQuestion(subQuestionId);
+  };
+
+  const calculateTimeLeft = () => {
+    if (!examStartTime || !selectedModule) return "0:00:00";
+    
+    const now = new Date();
+    const examEndTime = new Date(examStartTime.getTime() + selectedModule.duration * 60000);
+    const timeLeft = examEndTime.getTime() - now.getTime();
+    
+    if (timeLeft <= 0) return "0:00:00";
+    
+    const hours = Math.floor(timeLeft / (1000 * 60 * 60));
+    const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+    
+    return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
 
   const handleSave = () => {
@@ -43,8 +82,32 @@ const Index = () => {
     // Implement help logic
   };
 
+  // Module Selection Phase
+  if (examState === 'module-selection') {
+    return (
+      <ThemeProvider isDarkMode={isDarkMode}>
+        <ModuleSelection onModuleSelect={handleModuleSelect} />
+      </ThemeProvider>
+    );
+  }
+
+  // Verification Phase
+  if (examState === 'verification' && selectedModule) {
+    return (
+      <ThemeProvider isDarkMode={isDarkMode}>
+        <ExamVerification 
+          selectedModule={selectedModule}
+          onStartExam={handleStartExam}
+          onBack={handleBackToModuleSelection}
+        />
+      </ThemeProvider>
+    );
+  }
+
+  // Exam In Progress Phase
   const currentAnswerKey = `${currentQuestion}.${currentSubQuestion}`;
   const currentAnswer = answers[currentAnswerKey] || '';
+  const timeLeft = calculateTimeLeft();
 
   return (
     <ThemeProvider isDarkMode={isDarkMode}>
@@ -62,6 +125,7 @@ const Index = () => {
             <AssessmentStickyHeader
               currentQuestion={currentQuestion}
               currentSubQuestion={currentSubQuestion}
+              timeLeft={timeLeft}
               isDarkMode={isDarkMode}
               onToggleDarkMode={() => setIsDarkMode(!isDarkMode)}
               onSave={handleSave}
