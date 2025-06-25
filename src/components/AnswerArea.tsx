@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
@@ -29,8 +30,20 @@ interface AnswerAreaProps {
 
 const AnswerArea = ({ questionId, subQuestionId, value, onChange }: AnswerAreaProps) => {
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
-  const [activeTables, setActiveTables] = useState<string[]>([]);
+  const [activeTables, setActiveTables] = useState<Record<string, string[]>>({});
   const [selectedText, setSelectedText] = useState('');
+
+  const currentQuestionKey = `${questionId}.${subQuestionId}`;
+
+  // Clear tables when switching questions
+  useEffect(() => {
+    if (!activeTables[currentQuestionKey]) {
+      setActiveTables(prev => ({
+        ...prev,
+        [currentQuestionKey]: []
+      }));
+    }
+  }, [currentQuestionKey]);
 
   // Auto-save functionality
   useEffect(() => {
@@ -87,31 +100,39 @@ const AnswerArea = ({ questionId, subQuestionId, value, onChange }: AnswerAreaPr
   };
 
   const addTable = (templateKey: string) => {
-    if (!activeTables.includes(templateKey)) {
-      setActiveTables(prev => [...prev, templateKey]);
+    const questionTables = activeTables[currentQuestionKey] || [];
+    if (!questionTables.includes(templateKey)) {
+      setActiveTables(prev => ({
+        ...prev,
+        [currentQuestionKey]: [...questionTables, templateKey]
+      }));
     }
   };
 
   const removeTable = (templateKey: string) => {
-    setActiveTables(prev => prev.filter(key => key !== templateKey));
+    const questionTables = activeTables[currentQuestionKey] || [];
+    setActiveTables(prev => ({
+      ...prev,
+      [currentQuestionKey]: questionTables.filter(key => key !== templateKey)
+    }));
   };
 
   const mathSymbols = ['√', '²', '³', '±', '≤', '≥', '×', '÷', '%', 'R', '$', '€'];
 
   const getTableSuggestions = () => {
-    const questionKey = `${questionId}.${subQuestionId}`;
-    
     // Suggest relevant tables based on question content
     const suggestions = [];
     
-    if (questionKey === "1.1") suggestions.push('eoq');
-    if (questionKey === "1.2") suggestions.push('fifo');
-    if (questionKey === "1.3") suggestions.push('labourCost');
-    if (questionKey === "2.2") suggestions.push('incomeStatement');
-    if (questionKey === "4") suggestions.push('cashBudget');
+    if (currentQuestionKey === "1.1") suggestions.push('eoq');
+    if (currentQuestionKey === "1.2") suggestions.push('fifo');
+    if (currentQuestionKey === "1.3") suggestions.push('labourCost');
+    if (currentQuestionKey === "2.2") suggestions.push('incomeStatement');
+    if (currentQuestionKey === "4") suggestions.push('cashBudget');
     
     return suggestions;
   };
+
+  const currentQuestionTables = activeTables[currentQuestionKey] || [];
 
   return (
     <Card className="w-full">
@@ -228,9 +249,9 @@ const AnswerArea = ({ questionId, subQuestionId, value, onChange }: AnswerAreaPr
           </div>
         )}
 
-        {/* Active Tables */}
-        {activeTables.map((templateKey) => (
-          <div key={templateKey} className="relative">
+        {/* Active Tables for Current Question */}
+        {currentQuestionTables.map((templateKey, index) => (
+          <div key={`${currentQuestionKey}-${templateKey}-${index}`} className="relative">
             <div className="absolute top-2 right-2 z-10">
               <Button
                 onClick={() => removeTable(templateKey)}
@@ -243,8 +264,9 @@ const AnswerArea = ({ questionId, subQuestionId, value, onChange }: AnswerAreaPr
             </div>
             <EditableTable 
               config={tableTemplates[templateKey]}
+              tableId={`${currentQuestionKey}-${templateKey}-${index}`}
               onChange={(data) => {
-                console.log('Table data changed:', data);
+                console.log(`Table ${templateKey} data changed for ${currentQuestionKey}:`, data);
               }}
             />
           </div>
