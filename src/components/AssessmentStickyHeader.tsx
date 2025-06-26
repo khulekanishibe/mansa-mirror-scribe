@@ -1,8 +1,6 @@
-
 import React from 'react';
 import { Clock, Save, Send, HelpCircle, Moon, Sun } from 'lucide-react';
 import { Button } from './ui/button';
-
 interface AssessmentStickyHeaderProps {
   currentQuestion: number;
   currentSubQuestion: string;
@@ -13,7 +11,6 @@ interface AssessmentStickyHeaderProps {
   onSubmit: () => void;
   onHelp: () => void;
 }
-
 const AssessmentStickyHeader = ({
   currentQuestion,
   currentSubQuestion,
@@ -24,8 +21,7 @@ const AssessmentStickyHeader = ({
   onSubmit,
   onHelp
 }: AssessmentStickyHeaderProps) => {
-  return (
-    <div className="sticky top-0 z-20 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-3 shadow-sm">
+  return <div className="sticky top-0 z-20 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-3 shadow-sm">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2">
@@ -33,9 +29,7 @@ const AssessmentStickyHeader = ({
               Question {currentQuestion}.{currentSubQuestion}
             </span>
             <div className="h-4 w-px bg-gray-300 dark:bg-gray-600"></div>
-            <span className="text-sm text-gray-600 dark:text-gray-400">
-              Management Accounting OSA
-            </span>
+            <span className="text-sm text-lime-700">Database Design and Management OSA</span>
           </div>
         </div>
 
@@ -46,50 +40,26 @@ const AssessmentStickyHeader = ({
           </div>
 
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onSave}
-              className="text-[#0d643f] border-[#0d643f] hover:bg-[#0d643f] hover:text-white"
-            >
+            <Button variant="outline" size="sm" onClick={onSave} className="text-[#0d643f] border-[#0d643f] hover:bg-[#0d643f] hover:text-white">
               <Save className="w-4 h-4 mr-2" />
               Save
             </Button>
             
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onSubmit}
-              className="text-[#1177d1] border-[#1177d1] hover:bg-[#1177d1] hover:text-white"
-            >
+            <Button variant="outline" size="sm" onClick={onSubmit} className="text-[#1177d1] border-[#1177d1] hover:bg-[#1177d1] hover:text-white">
               <Send className="w-4 h-4 mr-2" />
               Submit
             </Button>
 
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onHelp}
-              className="text-gray-600 dark:text-gray-400"
-              title="Help & Instructions"
-            >
+            <Button variant="ghost" size="sm" onClick={onHelp} className="text-gray-600 dark:text-gray-400" title="Help & Instructions">
               <HelpCircle className="w-4 h-4" />
             </Button>
 
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onToggleDarkMode}
-              className="text-gray-600 dark:text-gray-400"
-              title="Toggle Dark Mode"
-            >
+            <Button variant="ghost" size="sm" onClick={onToggleDarkMode} className="text-gray-600 dark:text-gray-400" title="Toggle Dark Mode">
               {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </Button>
           </div>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default AssessmentStickyHeader;
