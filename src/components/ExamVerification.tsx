@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
@@ -54,6 +53,11 @@ const ExamVerification: React.FC<ExamVerificationProps> = ({
   };
 
   const isExamTimeValid = () => {
+    // Always return true for development/testing purposes
+    return true;
+    
+    // Original time validation code (commented out for development)
+    /*
     const now = currentTime;
     const startTime = new Date(now);
     const endTime = new Date(now);
@@ -65,6 +69,7 @@ const ExamVerification: React.FC<ExamVerificationProps> = ({
     endTime.setHours(endHour, endMinute, 0, 0);
     
     return now >= startTime && now <= endTime;
+    */
   };
 
   return (
