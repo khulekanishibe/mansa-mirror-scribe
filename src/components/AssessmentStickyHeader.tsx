@@ -29,7 +29,7 @@ const AssessmentStickyHeader = ({
               Question {currentQuestion}.{currentSubQuestion}
             </span>
             <div className="h-4 w-px bg-gray-300 dark:bg-gray-600"></div>
-            <span className="text-sm text-lime-700">Database Design and Management OSA</span>
+            <span className="text-lime-950 text-xl font-bold">Database Design and Management OSA</span>
           </div>
         </div>
 
