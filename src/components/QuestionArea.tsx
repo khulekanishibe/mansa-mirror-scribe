@@ -2,30 +2,42 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { examData } from '../data/examData';
+
 interface QuestionAreaProps {
   currentQuestion: number;
   currentSubQuestion?: number;
+  examType?: 'calculation' | 'mcq' | 'essay' | 'mixed';
 }
+
 const QuestionArea = ({
   currentQuestion,
-  currentSubQuestion = 1
+  currentSubQuestion = 1,
+  examType = 'calculation'
 }: QuestionAreaProps) => {
   const question = examData.questions.find(q => q.number === currentQuestion);
+  
   if (!question) {
-    return <Card className="mb-6">
+    return (
+      <Card className="mb-6">
         <CardContent className="p-6">
           <p className="text-gray-500">Question not found.</p>
         </CardContent>
-      </Card>;
+      </Card>
+    );
   }
+
   const subQuestion = question.subquestions[currentSubQuestion - 1];
+  
   if (!subQuestion) {
-    return <Card className="mb-6">
+    return (
+      <Card className="mb-6">
         <CardContent className="p-6">
           <p className="text-gray-500">Sub-question not found.</p>
         </CardContent>
-      </Card>;
+      </Card>
+    );
   }
+
   const renderInformation = (info: any) => {
     if (!info) return null;
     if (typeof info === 'string') {
@@ -92,17 +104,60 @@ const QuestionArea = ({
     }
     return null;
   };
-  return <Card className="mb-6">
+
+  const renderMCQOptions = (options: any[]) => {
+    if (!options) return null;
+    
+    return (
+      <div className="mt-4 space-y-2">
+        <h4 className="font-medium text-gray-900 dark:text-gray-100">Options:</h4>
+        {options.map((option: any, index: number) => (
+          <div key={index} className="flex items-center space-x-2 p-2 border border-gray-200 dark:border-gray-700 rounded">
+            <span className="font-medium text-[#0d643f]">{option.letter}.</span>
+            <span className="text-gray-700 dark:text-gray-300">{option.text}</span>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  const renderCaseStudy = (caseStudy: any) => {
+    if (!caseStudy) return null;
+    
+    return (
+      <div className="mb-6 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+        <h3 className="font-semibold text-amber-900 dark:text-amber-200 mb-2">{caseStudy.title}</h3>
+        <p className="text-amber-800 dark:text-amber-300 text-sm leading-relaxed">{caseStudy.content}</p>
+      </div>
+    );
+  };
+
+  const renderArticleExtract = (article: any) => {
+    if (!article) return null;
+    
+    return (
+      <div className="mb-6 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg p-4">
+        <h3 className="font-semibold text-indigo-900 dark:text-indigo-200 mb-2">{article.title}</h3>
+        <p className="text-indigo-800 dark:text-indigo-300 text-sm leading-relaxed">{article.content}</p>
+      </div>
+    );
+  };
+
+  return (
+    <Card className="mb-6">
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
           <CardTitle className="text-xl font-semibold text-gray-900 dark:text-gray-100 text-center">
-            Question {question.number}.{subQuestion.number}
+            Question {question.number}{subQuestion.number !== question.number.toString() ? `.${subQuestion.number}` : ''}
           </CardTitle>
           <div className="flex gap-2">
             <Badge variant="secondary" className="bg-[#0d643f] text-white">
               {subQuestion.marks} marks
             </Badge>
             {subQuestion.required && <Badge variant="destructive">Required</Badge>}
+            {examType === 'mcq' && <Badge variant="outline">Multiple Choice</Badge>}
+            {examType === 'essay' && <Badge variant="outline">Essay</Badge>}
+            {examType === 'calculation' && <Badge variant="outline">Calculation</Badge>}
           </div>
         </div>
       </CardHeader>
@@ -114,8 +169,25 @@ const QuestionArea = ({
           </div>
           
           {renderInformation(subQuestion.information)}
+          
+          {/* Render MCQ options if available */}
+          {examType === 'mcq' && subQuestion.information?.options && renderMCQOptions(subQuestion.information.options)}
+          
+          {/* Show requirements for essay questions */}
+          {(examType === 'essay' || examType === 'mixed') && subQuestion.information?.requirements && (
+            <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+              <h4 className="font-medium text-gray-900 dark:text-gray-200 mb-2">Requirements:</h4>
+              <ul className="space-y-1 text-sm text-gray-700 dark:text-gray-300">
+                {subQuestion.information.requirements.map((req: string, index: number) => (
+                  <li key={index}>• {req}</li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       </CardContent>
-    </Card>;
+    </Card>
+  );
 };
+
 export default QuestionArea;

@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SidebarProvider } from '../components/ui/sidebar';
 import AssessmentSidebar from '../components/AssessmentSidebar';
 import AssessmentStickyHeader from '../components/AssessmentStickyHeader';
@@ -9,13 +8,14 @@ import ModuleSelection from '../components/ModuleSelection';
 import ExamVerification from '../components/ExamVerification';
 import { ThemeProvider } from '../components/ThemeProvider';
 import { examData } from '../data/examData';
-import { ExamModule } from '../data/moduleData';
+import { ExamModule, getExamDataByModule } from '../data/moduleData';
 
 type ExamState = 'module-selection' | 'verification' | 'in-progress';
 
 const Index = () => {
   const [examState, setExamState] = useState<ExamState>('module-selection');
   const [selectedModule, setSelectedModule] = useState<ExamModule | null>(null);
+  const [currentExamData, setCurrentExamData] = useState(examData);
   const [currentQuestion, setCurrentQuestion] = useState(1);
   const [currentSubQuestion, setCurrentSubQuestion] = useState("1");
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -28,9 +28,21 @@ const Index = () => {
     setExamState('verification');
   };
 
-  const handleStartExam = () => {
-    setExamStartTime(new Date());
-    setExamState('in-progress');
+  const handleStartExam = async () => {
+    if (selectedModule) {
+      try {
+        const examData = await getExamDataByModule(selectedModule);
+        setCurrentExamData(examData);
+        setExamStartTime(new Date());
+        setExamState('in-progress');
+      } catch (error) {
+        console.error('Failed to load exam data:', error);
+        // Fallback to default exam data
+        setCurrentExamData(examData);
+        setExamStartTime(new Date());
+        setExamState('in-progress');
+      }
+    }
   };
 
   const handleBackToModuleSelection = () => {
@@ -120,6 +132,7 @@ const Index = () => {
             answers={answers}
             isCollapsed={sidebarCollapsed}
             onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+            examData={currentExamData}
           />
           <div className="flex-1 flex flex-col">
             <AssessmentStickyHeader
@@ -137,12 +150,14 @@ const Index = () => {
                 <QuestionArea 
                   currentQuestion={currentQuestion}
                   currentSubQuestion={parseInt(currentSubQuestion)}
+                  examType={selectedModule?.examType}
                 />
                 <AnswerArea 
                   questionId={currentQuestion}
                   subQuestionId={currentSubQuestion}
                   value={currentAnswer}
                   onChange={(content) => handleAnswerChange(currentQuestion, currentSubQuestion, content)}
+                  examType={selectedModule?.examType}
                 />
               </div>
             </div>

@@ -12,6 +12,7 @@ export interface ExamModule {
   description: string;
   startTime: string;
   endTime: string;
+  examDataFile: string; // Links to the specific exam data file
 }
 
 export const availableModules: ExamModule[] = [
@@ -27,7 +28,8 @@ export const availableModules: ExamModule[] = [
     examType: 'calculation',
     description: 'Calculation-heavy exam with financial tables, EOQ calculations, variance analysis, and cash budgets.',
     startTime: '08:00',
-    endTime: '16:00'
+    endTime: '16:00',
+    examDataFile: 'managementAccountingData'
   },
   {
     id: 'advanced-business-statistics',
@@ -41,7 +43,8 @@ export const availableModules: ExamModule[] = [
     examType: 'mcq',
     description: 'Multiple choice questions covering statistical analysis, probability distributions, and data interpretation.',
     startTime: '08:00',
-    endTime: '16:00'
+    endTime: '16:00',
+    examDataFile: 'businessStatisticsData'
   },
   {
     id: 'database-design-management',
@@ -55,7 +58,8 @@ export const availableModules: ExamModule[] = [
     examType: 'essay',
     description: 'Essay-based exam focusing on database design principles, ERDs, normalization, and SQL concepts.',
     startTime: '08:00',
-    endTime: '16:00'
+    endTime: '16:00',
+    examDataFile: 'databaseDesignData'
   },
   {
     id: 'principles-it-management',
@@ -69,10 +73,31 @@ export const availableModules: ExamModule[] = [
     examType: 'mixed',
     description: 'Mixed format exam with essay questions on BPM, IT trends, and organizational technology frameworks.',
     startTime: '08:00',
-    endTime: '16:00'
+    endTime: '16:00',
+    examDataFile: 'itManagementData'
   }
 ];
 
 export const getModuleById = (id: string): ExamModule | undefined => {
   return availableModules.find(module => module.id === id);
+};
+
+// Helper function to get exam data based on module
+export const getExamDataByModule = async (module: ExamModule) => {
+  switch (module.examDataFile) {
+    case 'managementAccountingData':
+      const { managementAccountingExam } = await import('./managementAccountingData');
+      return managementAccountingExam;
+    case 'businessStatisticsData':
+      const { businessStatisticsExam } = await import('./businessStatisticsData');
+      return businessStatisticsExam;
+    case 'databaseDesignData':
+      const { databaseDesignExam } = await import('./databaseDesignData');
+      return databaseDesignExam;
+    case 'itManagementData':
+      const { itManagementExam } = await import('./itManagementData');
+      return itManagementExam;
+    default:
+      throw new Error(`Unknown exam data file: ${module.examDataFile}`);
+  }
 };
