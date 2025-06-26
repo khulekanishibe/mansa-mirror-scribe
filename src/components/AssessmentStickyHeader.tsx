@@ -25,9 +25,7 @@ const AssessmentStickyHeader = ({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2">
-            <span className="font-semibold text-xl text-green-950">
-              Question {currentQuestion}.{currentSubQuestion}
-            </span>
+            
             <div className="h-4 w-px bg-gray-300 dark:bg-gray-600"></div>
             <span className="text-lime-950 text-xl font-bold">Database Design and Management OSA</span>
           </div>
