@@ -1,18 +1,20 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
-import { examData } from '../data/examData';
+import { BaseExamData } from '../types/examTypes';
 
 interface QuestionAreaProps {
   currentQuestion: number;
   currentSubQuestion?: number;
   examType?: 'calculation' | 'mcq' | 'essay' | 'mixed';
+  examData: BaseExamData;
 }
 
 const QuestionArea = ({
   currentQuestion,
   currentSubQuestion = 1,
-  examType = 'calculation'
+  examType = 'calculation',
+  examData
 }: QuestionAreaProps) => {
   const question = examData.questions.find(q => q.number === currentQuestion);
   
@@ -163,6 +165,10 @@ const QuestionArea = ({
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
+          {/* Render case study or article extract at the top if available */}
+          {examData.caseStudy && renderCaseStudy(examData.caseStudy)}
+          {examData.articleExtract && renderArticleExtract(examData.articleExtract)}
+          
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
             <h3 className="font-medium text-blue-900 dark:text-blue-200 mb-2">Required:</h3>
             <p className="text-blue-800 dark:text-blue-300">{subQuestion.task}</p>

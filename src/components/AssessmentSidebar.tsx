@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Clock, CheckCircle, Circle, AlertCircle, ChevronRight, ChevronDown, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import {
@@ -13,7 +12,7 @@ import {
   SidebarMenuButton,
 } from './ui/sidebar';
 import { Button } from './ui/button';
-import { examData } from '../data/examData';
+import { BaseExamData } from '../types/examTypes';
 
 interface AssessmentSidebarProps {
   currentQuestion: number;
@@ -22,6 +21,7 @@ interface AssessmentSidebarProps {
   answers: Record<string, string>;
   isCollapsed: boolean;
   onToggleCollapse: () => void;
+  examData: BaseExamData;
 }
 
 const AssessmentSidebar = ({ 
@@ -30,7 +30,8 @@ const AssessmentSidebar = ({
   onQuestionSelect, 
   answers,
   isCollapsed,
-  onToggleCollapse
+  onToggleCollapse,
+  examData
 }: AssessmentSidebarProps) => {
   const [expandedQuestions, setExpandedQuestions] = useState<number[]>([currentQuestion]);
   const timeLeft = "1:56:50";

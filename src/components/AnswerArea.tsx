@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
@@ -26,9 +25,10 @@ interface AnswerAreaProps {
   subQuestionId: string;
   value: string;
   onChange: (content: string) => void;
+  examType?: 'calculation' | 'mcq' | 'essay' | 'mixed';
 }
 
-const AnswerArea = ({ questionId, subQuestionId, value, onChange }: AnswerAreaProps) => {
+const AnswerArea = ({ questionId, subQuestionId, value, onChange, examType = 'calculation' }: AnswerAreaProps) => {
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [activeTables, setActiveTables] = useState<Record<string, string[]>>({});
   const [selectedText, setSelectedText] = useState('');
@@ -120,7 +120,9 @@ const AnswerArea = ({ questionId, subQuestionId, value, onChange }: AnswerAreaPr
   const mathSymbols = ['√', '²', '³', '±', '≤', '≥', '×', '÷', '%', 'R', '$', '€'];
 
   const getTableSuggestions = () => {
-    // Suggest relevant tables based on question content
+    // Only suggest tables for calculation type exams
+    if (examType !== 'calculation') return [];
+    
     const suggestions = [];
     
     if (currentQuestionKey === "1.1") suggestions.push('eoq');
@@ -133,6 +135,35 @@ const AnswerArea = ({ questionId, subQuestionId, value, onChange }: AnswerAreaPr
   };
 
   const currentQuestionTables = activeTables[currentQuestionKey] || [];
+
+  const getPlaceholderText = () => {
+    switch (examType) {
+      case 'mcq':
+        return `Select your answer for Question ${questionId}.${subQuestionId} by typing the letter (A, B, C, or D) and provide any working or reasoning...`;
+      case 'essay':
+        return `Write your essay answer for Question ${questionId}.${subQuestionId} here...
+
+Structure your response clearly with:
+• Introduction
+• Main points with supporting evidence
+• Conclusion
+
+Remember to address all requirements listed in the question.`;
+      case 'mixed':
+        return `Provide your answer for Question ${questionId}.${subQuestionId} here...
+
+This question may require both analytical writing and calculations. Show all working clearly.`;
+      default:
+        return `Type your answer for Question ${questionId}.${subQuestionId} here...
+
+You can use formatting like:
+• **bold text**
+• *italic text*
+• __underlined text__
+
+Show all your working steps clearly.`;
+    }
+  };
 
   return (
     <Card className="w-full">
@@ -156,76 +187,82 @@ const AnswerArea = ({ questionId, subQuestionId, value, onChange }: AnswerAreaPr
       </CardHeader>
       
       <CardContent className="space-y-4">
-        {/* Formatting Toolbar */}
-        <div className="flex flex-wrap items-center gap-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-          <div className="flex items-center gap-1">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => formatText('bold')}
-              title="Bold (Ctrl+B)"
-            >
-              <Bold className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => formatText('italic')}
-              title="Italic (Ctrl+I)"
-            >
-              <Italic className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => formatText('underline')}
-              title="Underline (Ctrl+U)"
-            >
-              <Underline className="w-4 h-4" />
-            </Button>
-          </div>
-          
-          <div className="h-6 w-px bg-gray-300 dark:bg-gray-600"></div>
-          
-          <div className="flex items-center gap-1">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => insertList(false)}
-              title="Bullet List"
-            >
-              <List className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => insertList(true)}
-              title="Numbered List"
-            >
-              <ListOrdered className="w-4 h-4" />
-            </Button>
-          </div>
-          
-          <div className="h-6 w-px bg-gray-300 dark:bg-gray-600"></div>
-          
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-600 dark:text-gray-400">Math:</span>
-            {mathSymbols.map((symbol) => (
+        {/* Formatting Toolbar - only show for non-MCQ questions */}
+        {examType !== 'mcq' && (
+          <div className="flex flex-wrap items-center gap-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+            <div className="flex items-center gap-1">
               <Button
-                key={symbol}
                 variant="outline"
                 size="sm"
-                onClick={() => insertSymbol(symbol)}
-                className="h-8 w-8 p-0 text-sm"
-                title={`Insert ${symbol}`}
+                onClick={() => formatText('bold')}
+                title="Bold (Ctrl+B)"
               >
-                {symbol}
+                <Bold className="w-4 h-4" />
               </Button>
-            ))}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => formatText('italic')}
+                title="Italic (Ctrl+I)"
+              >
+                <Italic className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => formatText('underline')}
+                title="Underline (Ctrl+U)"
+              >
+                <Underline className="w-4 h-4" />
+              </Button>
+            </div>
+            
+            <div className="h-6 w-px bg-gray-300 dark:bg-gray-600"></div>
+            
+            <div className="flex items-center gap-1">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => insertList(false)}
+                title="Bullet List"
+              >
+                <List className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => insertList(true)}
+                title="Numbered List"
+              >
+                <ListOrdered className="w-4 h-4" />
+              </Button>
+            </div>
+            
+            {examType === 'calculation' && (
+              <>
+                <div className="h-6 w-px bg-gray-300 dark:bg-gray-600"></div>
+                
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-600 dark:text-gray-400">Math:</span>
+                  {mathSymbols.map((symbol) => (
+                    <Button
+                      key={symbol}
+                      variant="outline"
+                      size="sm"
+                      onClick={() => insertSymbol(symbol)}
+                      className="h-8 w-8 p-0 text-sm"
+                      title={`Insert ${symbol}`}
+                    >
+                      {symbol}
+                    </Button>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
-        </div>
+        )}
 
-        {/* Table Templates */}
+        {/* Table Templates - only for calculation exams */}
         {getTableSuggestions().length > 0 && (
           <div className="space-y-3">
             <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
@@ -272,22 +309,37 @@ const AnswerArea = ({ questionId, subQuestionId, value, onChange }: AnswerAreaPr
           </div>
         ))}
 
+        {/* MCQ Selection for MCQ exams */}
+        {examType === 'mcq' && (
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Select your answer:
+            </label>
+            <div className="flex gap-2">
+              {['A', 'B', 'C', 'D'].map((letter) => (
+                <Button
+                  key={letter}
+                  variant={value.toUpperCase().startsWith(letter) ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => onChange(letter)}
+                  className="w-12 h-12"
+                >
+                  {letter}
+                </Button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Main Answer Textarea */}
         <div className="space-y-2">
           <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            Your Answer:
+            {examType === 'mcq' ? 'Working/Reasoning (Optional):' : 'Your Answer:'}
           </label>
           <Textarea
             value={value}
             onChange={(e) => onChange(e.target.value)}
-            placeholder={`Type your answer for Question ${questionId}.${subQuestionId} here...
-
-You can use formatting like:
-• **bold text**
-• *italic text*
-• __underlined text__
-
-Show all your working steps clearly.`}
+            placeholder={getPlaceholderText()}
             className="min-h-[400px] font-mono text-sm leading-relaxed resize-y"
           />
         </div>

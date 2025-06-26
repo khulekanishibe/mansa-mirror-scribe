@@ -9,13 +9,17 @@ import ExamVerification from '../components/ExamVerification';
 import { ThemeProvider } from '../components/ThemeProvider';
 import { examData } from '../data/examData';
 import { ExamModule, getExamDataByModule } from '../data/moduleData';
+import { BaseExamData } from '../types/examTypes';
 
 type ExamState = 'module-selection' | 'verification' | 'in-progress';
 
 const Index = () => {
   const [examState, setExamState] = useState<ExamState>('module-selection');
   const [selectedModule, setSelectedModule] = useState<ExamModule | null>(null);
-  const [currentExamData, setCurrentExamData] = useState(examData);
+  const [currentExamData, setCurrentExamData] = useState<BaseExamData>({
+    ...examData,
+    examType: 'calculation'
+  });
   const [currentQuestion, setCurrentQuestion] = useState(1);
   const [currentSubQuestion, setCurrentSubQuestion] = useState("1");
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -28,17 +32,45 @@ const Index = () => {
     setExamState('verification');
   };
 
+  const normalizeExamData = (data: any, examType: string): BaseExamData => {
+    // Handle different exam data structures
+    if (data.sections) {
+      // IT Management format with sections
+      return {
+        examTitle: data.examTitle,
+        totalMarks: data.totalMarks,
+        examType: examType as 'calculation' | 'mcq' | 'essay' | 'mixed',
+        questions: [...data.sections.sectionA, ...data.sections.sectionB],
+        articleExtract: data.articleExtract,
+        sections: data.sections
+      };
+    } else {
+      // Standard format
+      return {
+        examTitle: data.examTitle,
+        totalMarks: data.totalMarks,
+        examType: examType as 'calculation' | 'mcq' | 'essay' | 'mixed',
+        questions: data.questions,
+        caseStudy: data.caseStudy
+      };
+    }
+  };
+
   const handleStartExam = async () => {
     if (selectedModule) {
       try {
         const examData = await getExamDataByModule(selectedModule);
-        setCurrentExamData(examData);
+        const normalizedData = normalizeExamData(examData, selectedModule.examType);
+        setCurrentExamData(normalizedData);
         setExamStartTime(new Date());
         setExamState('in-progress');
       } catch (error) {
         console.error('Failed to load exam data:', error);
         // Fallback to default exam data
-        setCurrentExamData(examData);
+        setCurrentExamData({
+          ...examData,
+          examType: 'calculation'
+        });
         setExamStartTime(new Date());
         setExamState('in-progress');
       }
@@ -150,14 +182,15 @@ const Index = () => {
                 <QuestionArea 
                   currentQuestion={currentQuestion}
                   currentSubQuestion={parseInt(currentSubQuestion)}
-                  examType={selectedModule?.examType}
+                  examType={currentExamData.examType}
+                  examData={currentExamData}
                 />
                 <AnswerArea 
                   questionId={currentQuestion}
                   subQuestionId={currentSubQuestion}
                   value={currentAnswer}
                   onChange={(content) => handleAnswerChange(currentQuestion, currentSubQuestion, content)}
-                  examType={selectedModule?.examType}
+                  examType={currentExamData.examType}
                 />
               </div>
             </div>
